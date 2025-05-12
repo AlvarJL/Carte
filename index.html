@@ -114,13 +114,12 @@
       margin: 10px 0;
     }
 
-    /* Popup styling */
     .leaflet-popup-content {
-      background-color: #042875; /* Match the review page background */
+      background-color: #042875;
       color: white;
       padding: 15px;
       border-radius: 8px;
-      width: 300px; /* Adjusted width */
+      width: 300px; 
       font-family: 'Arial', sans-serif;
     }
 
@@ -158,20 +157,20 @@
       border-color: #ccc;
     }
 
-    /* Updated text color in reviews */
+
     .popup-reviews .review-box p {
-      color: black; /* Make review text black */
+      color: black;
     }
 
-    /* Added styling for date and rating */
+
     .popup-reviews .review-box .date {
       font-style: italic;
-      color: #555; /* Lighter color for the date */
+      color: #555; 
     }
 
     .popup-reviews .review-box .rating {
       font-weight: bold;
-      color: #000; /* Ensure rating is black */
+      color: #000; 
     }
 
     .icao-tooltip {
@@ -186,6 +185,12 @@
     }
 
   </style>
+
+
+
+
+
+  
 </head>
 <body>
   <div id="map"></div>
@@ -252,6 +257,12 @@
       return '#F44336';
     }
 
+
+
+
+
+    
+
     function createMarker(airportId, data) {
   const coords = [data.location.latitude, data.location.longitude];
   const marker = L.circleMarker(coords, {
@@ -262,18 +273,21 @@
     fillOpacity: 0.8
   }).addTo(map);
 
-  // Add ICAO label as a tooltip
+
+
+
+      
   const tooltip = L.tooltip({
     permanent: true,
     direction: 'bottom',
-    offset: [0, 10], // Shift down slightly
+    offset: [0, 10],
     className: 'name-tooltip'
   })
   .setContent(data.name || '')
   .setLatLng(coords)
   .addTo(map);
 
-  // Show tooltip only when zoomed in
+
   function toggleTooltip() {
     if (map.getZoom() >= 10) {
       tooltip.getElement().style.display = 'block';
@@ -283,7 +297,7 @@
   }
 
   map.on('zoomend', toggleTooltip);
-  toggleTooltip(); // Initial check
+  toggleTooltip();
 
   marker.on('click', async () => {
     const reviewSnap = await db.collection("airports").doc(airportId).collection("reviews").orderBy("createdAt", "desc").get();
