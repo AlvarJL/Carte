@@ -48,29 +48,31 @@
       Ajouter un Aérodrome
     </button>
 
-    <div class="review-form" id="addAirportForm">
-      <span class="close-btn" id="closeAirportForm">X</span>
-      <h3>Cliquez sur la carte pour ajouter l'aérodrome</h3>
-      <input type="text" id="username" placeholder="Votre nom..." />
-      <input
-        type="text"
-        id="airportName"
-        placeholder="Code OACI de l'aérodrome..."
-      />
-      <input
-        type="number"
-        id="airportTax"
-        placeholder="Taxe d'atterrissage... (Chiffres uniquement)"
-        min="0"
-        step="0.01"
-      />
-      <p>Y a-t-il un restaurant à cet aérodrome ?</p>
-      <div id="restaurantQuestion">
-        <button type="button" id="restaurantYesBtn">Oui</button>
-        <button type="button" id="restaurantNoBtn">Non</button>
-      </div>
+    <div class="add-airport-form" id="addAirportForm">
+      <form class="add-airport-form-content">
+        <span class="close-btn" id="closeAirportForm">X</span>
+        <h3>Cliquez sur la carte pour ajouter l'aérodrome</h3>
+        <input type="text" id="username" placeholder="Votre nom..." />
+        <input
+          type="text"
+          id="airportName"
+          placeholder="Code OACI de l'aérodrome..."
+        />
+        <input
+          type="number"
+          id="airportTax"
+          placeholder="Taxe d'atterrissage... (Chiffres uniquement)"
+          min="0"
+          step="0.01"
+        />
+        <p>Y a-t-il un restaurant à cet aérodrome ?</p>
+        <div id="restaurantQuestion">
+          <button type="button" id="restaurantYesBtn">Oui</button>
+          <button type="button" id="restaurantNoBtn">Non</button>
+        </div>
 
-      <button id="submitAirportBtn">Ajouter</button>
+        <button id="submitAirportBtn">Ajouter</button>
+      </form>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -302,7 +304,7 @@
       }
 
       addAirportBtn.addEventListener("click", () => {
-        addAirportForm.style.display = "block";
+        addAirportForm.style.display = "flex";
         mymap.on("click", onMapClick);
       });
 
