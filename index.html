@@ -5,287 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aeroclub Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-      }
-      #map {
-        height: 100vh;
-        width: 100%;
-      }
-
-      .review-form {
-        position: fixed;
-        top: 20%;
-        bottom: 20%;
-        left: 20%;
-        right: 20%;
-        z-index: 1000;
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        display: none;
-        width: 60%;
-        height: 60%;
-        background-color: #1d1e3e;
-        color: white;
-      }
-
-      .close-btn {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        font-size: 24px;
-        font-weight: bold;
-        color: #fff;
-        cursor: pointer;
-      }
-
-      .close-btn:hover {
-        color: #f44336;
-      }
-
-      .review-form input,
-      .review-form textarea,
-      .review-form button {
-        display: block;
-        margin: 15px auto;
-        width: 90%;
-        padding: 12px;
-        border: 1px solid #b0c4de;
-        background-color: #f1f1f1;
-        border-radius: 8px;
-        color: #333;
-        font-size: 16px;
-        font-family: "Arial", sans-serif;
-      }
-
-      .review-form input:focus,
-      .review-form textarea:focus,
-      .review-form button:focus {
-        outline: none;
-      }
-
-      .review-form textarea {
-        resize: vertical;
-        min-height: 100px;
-      }
-
-      .review-form button {
-        background-color: #45a049;
-        color: white;
-        cursor: pointer;
-        font-weight: bold;
-        margin-top: 20%;
-        transition: background-color 0.3s ease;
-      }
-
-      .review-form button:hover {
-        background-color: #27642a;
-      }
-
-      .review-form button:active {
-        background-color: #27642a;
-      }
-
-      .review-form input::placeholder,
-      .review-form textarea::placeholder {
-        color: #888;
-        font-style: italic;
-      }
-
-      .popup-content {
-        font-size: 14px;
-        line-height: 1.6;
-      }
-
-      .review-section {
-        border-top: 1px solid #ddd;
-        margin-top: 10px;
-        padding-top: 10px;
-      }
-
-      .review-box {
-        background-color: white;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        padding: 10px;
-      }
-
-      .review-box b {
-        color: #1d1e3e;
-      }
-
-      #addReviewButton {
-        background-color: #45a049;
-        color: white;
-        cursor: pointer;
-        font-weight: bold;
-        margin-top: 20%;
-        transition: background-color 0.3s ease;
-        border-width: 0px;
-        border-radius: 2px;
-        height: 30px;
-      }
-
-      .slider {
-        width: 100%;
-        margin: 10px 0;
-      }
-
-      .leaflet-popup-content-wrapper,
-      .leaflet-popup-tip {
-        background: #1d1e3e00;
-        padding: 0; 
-        margin: 0;
-        border: none;
-        box-shadow: none;
-      }
-
-     
-      .leaflet-popup-content {
-        background-color: #1d1e3e;
-        color: white;
-        padding: 15px;
-        border-radius: 8px;
-        width: 300px;
-        font-family: "Arial", sans-serif;
-      }
-
-      .popup-header {
-        font-size: 18px;
-        font-weight: bold;
-        color: white;
-      }
-
-      .popup-info {
-        margin: 10px 0;
-      }
-
-      .popup-info span {
-        font-weight: bold;
-      }
-
-      .popup-rating {
-        margin-top: 10px;
-        font-size: 16px;
-      }
-
-      .popup-divider {
-        margin: 10px 0;
-        border-top: 1px solid #ddd;
-        padding-top: 10px;
-      }
-
-      .popup-reviews {
-        font-size: 14px;
-      }
-
-      .popup-reviews .review-box {
-        background-color: white;
-        border-color: #ccc;
-      }
-
-
-      .popup-reviews .review-box p {
-        color: black;
-      }
-
-      .popup-reviews .review-box .date {
-        font-style: italic;
-        color: #555; 
-      }
-
-      .popup-reviews .review-box .rating {
-        font-weight: bold;
-        color: #000;
-      }
-
-      .icao-tooltip {
-        background: none;
-        border: none;
-        color: black;
-        font-weight: bold;
-        font-size: 12px;
-        text-align: center;
-        box-shadow: none;
-        pointer-events: none;
-      }
-
-      #restaurantQuestion {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 120px;
-      }
-
-      #restaurantQuestion p {
-        flex-basis: 100%;
-        margin: 0 0 8px 0;
-        font-size: 14px;
-        width: 100%;
-      }
-
-      #restaurantQuestion button {
-        width: 100%;
-        height: 40px;
-        border-radius: 10%;
-        border: 1px solid #ffffff;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 16px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        user-select: none;
-        transition: background-color 0.3s, border-color 0.3s;
-        margin-right: 2vw;
-        margin-left: 2vw;
-      }
-
-      #submitReviewBtn {
-        background-color: #45a049;
-        color: white;
-        cursor: pointer;
-        font-weight: bold;
-        margin-top: 20%;
-        transition: background-color 0.3s ease;
-        border-width: 0px;
-        border-radius: 2px;
-        height: 30px;
-      }
-
-      #airportTax {
-        margin-bottom: 15%;
-      }
-
-      #restaurantYesBtn {
-        background-color: #45a049;
-      }
-
-      #restaurantNoBtn {
-        background-color: #ff0000;
-      }
-
-      #addAirportForm {
-        position: fixed;
-        top: 0;
-        left: 70vw;
-        width: 30vw;
-        height: 100vh;
-        background-color: #1d1e3e;
-        box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        overflow-y: auto;
-        z-index: 1000;
-        display: none;
-        box-sizing: border-box;
-      }
-    </style>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div id="map"></div>
@@ -396,7 +116,7 @@
         let marker;
 
         if (data.restaurant) {
-          let iconFilename = "forkgrey.png"; 
+          let iconFilename = "forkgrey.png";
 
           if (tax == 0) iconFilename = "forkgreen.png";
           else if (tax <= 10) iconFilename = "forkyellow.png";
@@ -411,7 +131,7 @@
 
           marker = L.marker(coords, { icon: restaurantIcon }).addTo(mymap);
         } else {
-          let iconFilename = "pingrey.png"; 
+          let iconFilename = "pingrey.png";
           if (tax == 0) iconFilename = "pingreen.png";
           else if (tax <= 10) iconFilename = "pinyellow.png";
           else if (tax <= 20) iconFilename = "pinorange.png";
@@ -425,7 +145,6 @@
 
           marker = L.marker(coords, { icon: noRestaurantIcon }).addTo(mymap);
         }
-
 
         const tooltip = L.tooltip({
           permanent: true,
@@ -504,7 +223,7 @@
       }
 
       window.showReviewForm = function (id) {
-        reviewForm.style.display = "block";
+        reviewForm.style.display = "flex";
         currentAirportId = id;
       };
 
@@ -556,7 +275,6 @@
       let selectedCoords = null;
       let tempMarker = null;
       let restaurant = null;
-
 
       const yesBtn = document.getElementById("restaurantYesBtn");
       const noBtn = document.getElementById("restaurantNoBtn");
