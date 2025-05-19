@@ -203,7 +203,7 @@
           const avgRating =
             reviewSnap.size > 0
               ? (ratingSum / reviewSnap.size).toFixed(1)
-              : "No ratings";
+              : "Aucun Avis";
           await db
             .collection("airports")
             .doc(airportId)
