@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aeroclub Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="map"></div>
+    <div class="review-form" id="reviewForm">
+      <div class="review-form-content">
+        <span class="close-btn" id="closeReviewForm">X</span>
+        <h3>Ajouter un avis</h3>
+        <input type="text" id="reviewName" placeholder="Votre nom..." />
+        <textarea id="reviewText" placeholder="Votre avis..."></textarea>
+        <label for="reviewRating">Note (0 - 5)</label>
+        <input
+          type="range"
+          id="reviewRating"
+          class="slider"
+          min="0"
+          max="5"
+          step="0.5"
+          value="0"
+        />
+        <span id="ratingValue">0</span>
+        <button id="submitReviewBtn">Envoyer</button>
+      </div>
+    </div>
+    <button
+      id="addAirportBtn"
+      style="
+        position: fixed;
+        top: 100px;
+        left: 12px;
+        z-index: 9999;
+        padding: 10px 15px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-weight: bold;
+        cursor: pointer;
+      "
+    >
+      Ajouter un Aérodrome
+    </button>
+
+    <div class="add-airport-form" id="addAirportForm">
+      <div class="add-airport-form-content">
+        <span class="close-btn" id="closeAirportForm">X</span>
+        <h3 id="cliquez">Cliquez sur la carte pour ajouter l'aérodrome</h3>
+        <input type="text" id="username" placeholder="Votre nom..." />
+        <input
+          type="text"
+          id="airportName"
+          placeholder="Code OACI de l'aérodrome..."
+        />
+        <input
+          type="number"
+          id="airportTax"
+          placeholder="Taxe d'atterrissage... (Chiffres uniquement)"
+          min="0"
+          step="0.01"
+        />
+        <p>Y a-t-il un restaurant à cet aérodrome ?</p>
+        <div id="restaurantQuestion">
+          <button type="button" id="restaurantYesBtn">Oui</button>
+          <button type="button" id="restaurantNoBtn">Non</button>
+        </div>
+
+        <button id="submitAirportBtn">Ajouter</button>
+      </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyB4L7Ymgj6lFRkgL7WTlZJJxMA0k7NcCwc",
+        authDomain: "carte-aerodromes-alcyons.firebaseapp.com",
+        projectId: "carte-aerodromes-alcyons",
+        storageBucket: "carte-aerodromes-alcyons.appspot.com",
+        messagingSenderId: "110054223104",
+        appId: "1:110054223104:web:23807e0c23f09e758d17e5",
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+
+      const mymap = L.map("map").setView([48.8, 2.2], 7);
+      L.tileLayer(
+        "https://tile.jawg.io/d323c7f6-365e-484c-859a-b6c81552be77/{z}/{x}/{y}{r}.png?access-token=cSq3H84Ic7eoyQP5zSWjTeFOI5Z11tN4rp9Zb0YZYvUHH18vlJqpeuIm9bp7d39b",
+        {
+          maxZoom: 18,
+          attribution:
+            '<a href="https://www.jawg.io" target="_blank">&copy; Jawg</a> - <a href="https://www.openstreetmap.org" target="_blank">&copy; OpenStreetMap</a> contributors',
+        }
+      ).addTo(mymap);
+
+      const reviewForm = document.getElementById("reviewForm");
+      const reviewName = document.getElementById("reviewName");
+      const reviewText = document.getElementById("reviewText");
+      const reviewRating = document.getElementById("reviewRating");
+      const ratingValue = document.getElementById("ratingValue");
+      let currentAirportId = null;
+
+      reviewRating.addEventListener("input", function () {
+        ratingValue.textContent = reviewRating.value;
+      });
+
+      function createMarker(airportId, data) {
+        const coords = [data.location.latitude, data.location.longitude];
+        const tax = data.tax || 0;
+
+        let marker;
+
+        if (data.restaurant) {
+          let iconFilename = "forkgrey.png";
+
+          if (tax == 0) iconFilename = "forkgreen.png";
+          else if (tax <= 10) iconFilename = "forkyellow.png";
+          else if (tax <= 20) iconFilename = "forkorange.png";
+          else if (tax > 20) iconFilename = "forkred.png";
+
+          const restaurantIcon = L.icon({
+            iconUrl: iconFilename,
+            iconSize: [40, 40],
+            iconAnchor: [12, 12],
+          });
+
+          marker = L.marker(coords, { icon: restaurantIcon }).addTo(mymap);
+        } else {
+          let iconFilename = "pingrey.png";
+          if (tax == 0) iconFilename = "pingreen.png";
+          else if (tax <= 10) iconFilename = "pinyellow.png";
+          else if (tax <= 20) iconFilename = "pinorange.png";
+          else if (tax > 20) iconFilename = "pinred.png";
+
+          const noRestaurantIcon = L.icon({
+            iconUrl: iconFilename,
+            iconSize: [40, 40],
+            iconAnchor: [12, 12],
+          });
+
+          marker = L.marker(coords, { icon: noRestaurantIcon }).addTo(mymap);
+        }
+
+        const tooltip = L.tooltip({
+          permanent: true,
+          direction: "bottom",
+          offset: [8, 30],
+          className: "name-tooltip",
+        })
+          .setContent(data.name || "")
+          .setLatLng(coords)
+          .addTo(mymap);
+
+        function toggleTooltip() {
+          if (mymap.getZoom() >= 10) {
+            tooltip.getElement().style.display = "block";
+          } else {
+            tooltip.getElement().style.display = "none";
+          }
+        }
+
+        mymap.on("zoomend", toggleTooltip);
+        toggleTooltip();
+
+        marker.on("click", async () => {
+          const reviewSnap = await db
+            .collection("airports")
+            .doc(airportId)
+            .collection("reviews")
+            .orderBy("createdAt", "desc")
+            .get();
+          let reviewsHtml = "<b>Avis:</b><br />";
+          let ratingSum = 0;
+
+          reviewSnap.forEach((doc) => {
+            const r = doc.data();
+            ratingSum += r.reviewrating;
+            const dateObj = r.createdAt?.toDate();
+            const date = dateObj
+              ? `${String(dateObj.getDate()).padStart(2, "0")}/${String(
+                  dateObj.getMonth() + 1
+                ).padStart(2, "0")}/${dateObj.getFullYear()}`
+              : "Unknown date";
+            reviewsHtml += `
+        <div class="review-box">
+          <b>${r.username}</b> <span class="date">(${date}):</span>
+          <p>${r.reviewtext}</p>
+          <span class="rating">Note: ${r.reviewrating} ⭐</span>
+        </div>
+        <br />
+      `;
+          });
+
+          const avgRating =
+            reviewSnap.size > 0
+              ? (ratingSum / reviewSnap.size).toFixed(1)
+              : "No ratings";
+          await db
+            .collection("airports")
+            .doc(airportId)
+            .update({ rating: parseFloat(avgRating) });
+
+          marker
+            .bindPopup(
+              `
+      <div class="popup-header">${data.name}</div>
+      <div class="popup-info">
+        <span>Taxe:</span> ${data.tax}<br>
+      </div>
+      <div class="popup-rating">Note: ${avgRating} ⭐</div>
+      <div class="popup-divider"></div>
+      <div class="popup-reviews">${reviewsHtml}</div>
+      <button id='addReviewButton' onclick="showReviewForm('${airportId}')">Ajouter un avis</button>
+    `
+            )
+            .openPopup();
+        });
+      }
+
+      window.showReviewForm = function (id) {
+        reviewForm.style.display = "flex";
+        currentAirportId = id;
+      };
+
+      document
+        .getElementById("submitReviewBtn")
+        .addEventListener("click", async () => {
+          const name = reviewName.value.trim();
+          const text = reviewText.value.trim();
+          const rating = parseFloat(reviewRating.value);
+          if (!name || !text || isNaN(rating)) {
+            alert("Please fill in all fields.");
+            return;
+          }
+
+          await db
+            .collection("airports")
+            .doc(currentAirportId)
+            .collection("reviews")
+            .add({
+              username: name,
+              reviewtext: text,
+              reviewrating: rating,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+
+          reviewForm.style.display = "none";
+          reviewName.value = "";
+          reviewText.value = "";
+          reviewRating.value = 0;
+          ratingValue.textContent = 0;
+          alert("Envoyé! Mettez à jour la page pour voir les modifications.");
+        });
+
+      document
+        .getElementById("closeReviewForm")
+        .addEventListener("click", function () {
+          reviewForm.style.display = "none";
+        });
+
+      db.collection("airports")
+        .get()
+        .then((snapshot) => {
+          snapshot.forEach((doc) => {
+            createMarker(doc.id, doc.data());
+          });
+        });
+    </script>
+    <script>
+      let selectedCoords = null;
+      let tempMarker = null;
+      let restaurant = null;
+
+      const yesBtn = document.getElementById("restaurantYesBtn");
+      const noBtn = document.getElementById("restaurantNoBtn");
+
+      yesBtn.addEventListener("click", () => {
+        restaurant = true;
+        highlightSelection(true);
+      });
+
+      noBtn.addEventListener("click", () => {
+        restaurant = false;
+        highlightSelection(false);
+      });
+
+      function highlightSelection(isYes) {
+        if (isYes) {
+          yesBtn.style.backgroundColor = "#265328";
+          noBtn.style.backgroundColor = "";
+        } else {
+          noBtn.style.backgroundColor = "#a00000";
+          yesBtn.style.backgroundColor = "";
+        }
+      }
+
+      addAirportBtn.addEventListener("click", () => {
+        addAirportForm.style.display = "flex";
+        mymap.on("click", onMapClick);
+      });
+
+      closeAirportForm.addEventListener("click", () => {
+        addAirportForm.style.display = "none";
+        selectedCoords = null;
+        restaurant = null;
+
+        if (tempMarker) {
+          mymap.removeLayer(tempMarker);
+          tempMarker = null;
+        }
+
+        highlightSelection(null);
+        mymap.off("click", onMapClick);
+      });
+
+      function onMapClick(e) {
+        selectedCoords = e.latlng;
+
+        if (tempMarker) {
+          mymap.removeLayer(tempMarker);
+        }
+
+        tempMarker = L.marker(selectedCoords, { draggable: true }).addTo(mymap);
+        tempMarker.on("dragend", function (e) {
+          selectedCoords = e.target.getLatLng();
+        });
+      }
+
+      document
+        .getElementById("submitAirportBtn")
+        .addEventListener("click", async () => {
+          const username = document.getElementById("username").value.trim();
+          const name = document.getElementById("airportName").value.trim();
+          const tax = document.getElementById("airportTax").value.trim();
+
+          if (
+            !username ||
+            !name ||
+            !tax ||
+            !selectedCoords ||
+            restaurant === null
+          ) {
+            alert(
+              "Merci de remplir tous les champs, de cliquer sur la carte, et de répondre à la question du restaurant."
+            );
+            return;
+          }
+
+          try {
+            const docRef = await db
+              .collection("airports")
+              .doc(name)
+              .set({
+                name: name,
+                location: new firebase.firestore.GeoPoint(
+                  selectedCoords.lat,
+                  selectedCoords.lng
+                ),
+                tax: tax,
+                rating: 0,
+                restaurant: restaurant,
+                username: username,
+              });
+
+            createMarker(name, {
+              name: name,
+              location: {
+                latitude: selectedCoords.lat,
+                longitude: selectedCoords.lng,
+              },
+              tax: tax,
+              rating: 0,
+              restaurant: restaurant,
+            });
+
+            alert("Aérodrome ajouté !");
+            addAirportForm.style.display = "none";
+
+            if (tempMarker) {
+              mymap.removeLayer(tempMarker);
+              tempMarker = null;
+            }
+
+            selectedCoords = null;
+            restaurant = null;
+            highlightSelection(null);
+            mymap.off("click", onMapClick);
+          } catch (error) {
+            console.error("Erreur:", error);
+            alert("Échec de l'ajout.");
+          }
+        });
+    </script>
+  </body>
+</html>
