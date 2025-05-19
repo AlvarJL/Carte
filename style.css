@@ -246,7 +246,7 @@
         margin-left: 2vw;
       }
 
-      form button {
+      .add-airport-form button {
         background-color: #45a049;
         color: white;
         cursor: pointer;
